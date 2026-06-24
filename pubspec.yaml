@@ -1,7 +1,17 @@
 name: ephemeral_bloc
 description: "Fire-and-forget one-shot action stream for flutter_bloc, for UI side-effects that must not live in state."
 version: 0.0.1
-homepage:
+
+homepage: https://github.com/ntfnd404/ephemeral_bloc
+repository: https://github.com/ntfnd404/ephemeral_bloc
+issue_tracker: https://github.com/ntfnd404/ephemeral_bloc/issues
+
+topics:
+  - bloc
+  - flutter-bloc
+  - side-effects
+  - actions
+  - one-shot-events 
 
 environment:
   sdk: ^3.12.2
@@ -10,6 +20,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  flutter_bloc: 9.1.1
+  nested: 1.0.0
 
 dev_dependencies:
   flutter_test:

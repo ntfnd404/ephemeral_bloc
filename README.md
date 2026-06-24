@@ -1,39 +1,41 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# ephemeral_bloc
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages).
+## Package type: Shared utility
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages).
--->
+Extends `flutter_bloc` with a typed one-shot action stream for side-effects
+(navigation, SnackBars, clipboard) that must not live in BLoC state. Used by
+every feature BLoC in the app.
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+## Internal structure
 
-## Features
+**Flat.** All symbols are at the same abstraction level.
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
-
-## Getting started
-
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
-
-## Usage
-
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
-
-```dart
-const like = 'sample';
+```
+lib/src/
+  ephemeral_bloc_listener.dart   ← EphemeralBlocListener widget
+  ephemeral_bloc_mixin.dart      ← EphemeralBlocMixin<S, A> for BLoC classes
+  ephemeral_bloc_observer.dart   ← EphemeralBlocObserver for debugging
+  ephemeral_bloc_streamable.dart ← EphemeralBlocStreamable / EphemeralBlocObservable interfaces
 ```
 
-## Additional information
+### Why flat
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+Single-concern utility with no internal hierarchy. All files are at the same
+abstraction level — no domain/application/data split applies.
+
+## Public API
+
+Barrel: `package:ephemeral_bloc/ephemeral_bloc.dart`
+
+| Symbol | Kind | Description |
+|---|---|---|
+| `EphemeralBlocMixin<S, A>` | mixin | Adds `actionStream` + `emitAction` to a `Bloc` |
+| `EphemeralBlocListener<B, S, A>` | widget | Listens to `actionStream` and calls `listener` |
+| `EphemeralBlocConsumer<B, S, A>` | widget | Combines `BlocBuilder` + `EphemeralBlocListener` |
+| `EphemeralBlocObserver` | class | `BlocObserver` that forwards actions to a callback |
+
+## Dependencies
+
+Workspace packages: none.
+Third-party: `flutter_bloc`.
+SDK: Flutter SDK.
