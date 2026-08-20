@@ -11,7 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Usage:
 /// ```dart
 /// EphemeralBlocConsumer<MyBloc, MyState, MyAction>(
-///   actionListener: (context, state, action) => switch (action) {
+///   actionListener: (context, action) => switch (action) {
 ///     MyError(:final exception) => showSnackBar(exception.toString()),
 ///     _ => null,
 ///   },
@@ -22,8 +22,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 ///
 /// Both [actionListener] and [stateListener] are optional. Omitting both
 /// reduces this widget to a plain [BlocBuilder].
-class EphemeralBlocConsumer<B extends BlocBase<S>, S, A>
+class EphemeralBlocConsumer<B extends BlocBase<S>, S, A extends Object>
     extends StatelessWidget {
+  /// Creates a widget that builds from state and optionally handles state and
+  /// action notifications.
   const EphemeralBlocConsumer({
     super.key,
     required this.builder,
@@ -35,15 +37,18 @@ class EphemeralBlocConsumer<B extends BlocBase<S>, S, A>
     this.buildWhen,
   });
 
-  /// The BLoC to subscribe to. When null, resolved via [context.read].
+  /// The BLoC to subscribe to. When null, resolved via `context.read`.
   final B? bloc;
 
   /// Builds the widget tree from the current state.
   final BlocWidgetBuilder<S> builder;
 
-  /// Called for each action emitted by the BLoC. Receives the current state
-  /// at the time of emission alongside the action.
-  final void Function(BuildContext context, S state, A action)? actionListener;
+  /// Called for each action emitted by the BLoC.
+  ///
+  /// An action should carry all data needed to perform its UI effect. After an
+  /// asynchronous effect, send an intent back to the BLoC so it can validate
+  /// its current state instead of retaining an earlier state snapshot here.
+  final void Function(BuildContext context, A action)? actionListener;
 
   /// Called for each state change. Mirrors [BlocListener.listener].
   final void Function(BuildContext context, S state)? stateListener;
@@ -63,7 +68,7 @@ class EphemeralBlocConsumer<B extends BlocBase<S>, S, A>
     properties
       ..add(DiagnosticsProperty<B?>('bloc', bloc))
       ..add(
-        ObjectFlagProperty<void Function(BuildContext, S, A)?>.has(
+        ObjectFlagProperty<void Function(BuildContext, A)?>.has(
           'actionListener',
           actionListener,
         ),
@@ -85,6 +90,12 @@ class EphemeralBlocConsumer<B extends BlocBase<S>, S, A>
         ObjectFlagProperty<bool Function(S, S)?>.has(
           'stateListenWhen',
           stateListenWhen,
+        ),
+      )
+      ..add(
+        ObjectFlagProperty<BlocBuilderCondition<S>?>.has(
+          'buildWhen',
+          buildWhen,
         ),
       );
   }
@@ -110,10 +121,7 @@ class EphemeralBlocConsumer<B extends BlocBase<S>, S, A>
       child = EphemeralBlocListener<B, S, A>(
         bloc: bloc,
         listenWhen: actionListenWhen,
-        listener: (ctx, action) {
-          final resolvedBloc = bloc ?? ctx.read<B>();
-          actionListener!(ctx, resolvedBloc.state, action);
-        },
+        listener: actionListener!,
         child: child,
       );
     }

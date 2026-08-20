@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:ephemeral_bloc/src/ephemeral_bloc_change.dart';
 import 'package:ephemeral_bloc/src/ephemeral_bloc_observer.dart';
 import 'package:ephemeral_bloc/src/ephemeral_bloc_streamable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Adds a one-shot action stream to any [BlocBase].
@@ -15,10 +15,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// class MyBloc extends Bloc<MyEvent, MyState>
 ///     with EphemeralBlocMixin<MyState, MyAction> { ... }
 /// ```
-mixin EphemeralBlocMixin<S, A> on BlocBase<S>
+mixin EphemeralBlocMixin<S, A extends Object> on BlocBase<S>
     implements EphemeralBlocStateStreamable<S, A> {
   final StreamController<A> _actionController = StreamController<A>.broadcast();
-  A? _currentAction;
+  final BlocObserver _actionObserver = Bloc.observer;
+  bool _isClosing = false;
 
   /// Broadcast stream of one-shot UI actions.
   ///
@@ -28,29 +29,27 @@ mixin EphemeralBlocMixin<S, A> on BlocBase<S>
 
   /// Emits [action] to all current [actionStream] subscribers.
   ///
-  /// **Closed-BLoC contract:** deliberate no-op when the BLoC is already
-  /// closed. Callers do not need to guard against a closed BLoC before calling
-  /// [emitAction]. This differs from [Bloc.emit], which throws on a closed
-  /// BLoC, because actions are fire-and-forget effects — missing one during
-  /// teardown is harmless.
+  /// This method is intended to be called only by the BLoC or Cubit that mixes
+  /// in this type. UI code should send an event or invoke a public command on
+  /// the BLoC instead.
+  ///
+  /// Calling this method after closing has started is a deliberate no-op.
+  /// Fire-and-forget effects produced during teardown are safely discarded.
+  @protected
   void emitAction(A action) {
-    if (!isClosed) {
-      final observer = Bloc.observer;
-      if (observer case final EphemeralBlocObserver actionObserver) {
-        actionObserver.onAction(
-          this,
-          EphemeralBlocChange(previous: _currentAction, current: action),
-        );
-      }
-      _actionController.add(action);
-      _currentAction = action;
+    if (_isClosing || isClosed) return;
+
+    if (_actionObserver case final EphemeralBlocObserver actionObserver) {
+      actionObserver.onAction(this, action);
     }
+    _actionController.add(action);
   }
 
+  @mustCallSuper
   @override
   Future<void> close() async {
+    _isClosing = true;
+    await super.close();
     await _actionController.close();
-
-    return super.close();
   }
 }

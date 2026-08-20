@@ -21,8 +21,7 @@ final class FakeEphemeralBloc extends Bloc<Object, int>
 
   @override
   Future<void> close() async {
+    await super.close();
     await _actionController.close();
-
-    return super.close();
   }
 }

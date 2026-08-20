@@ -1,4 +1,6 @@
-export 'src/ephemeral_bloc_change.dart';
+/// One-shot UI actions for applications built with `flutter_bloc`.
+library;
+
 export 'src/ephemeral_bloc_consumer.dart';
 export 'src/ephemeral_bloc_listener.dart';
 export 'src/ephemeral_bloc_mixin.dart';
