@@ -252,6 +252,9 @@ onAction(BlocBase<Object?> bloc, Object action) {
 
 Clone the repository and run the complete six-platform example:
 
+The example uses the current platform scaffold and requires Flutter 3.47 or
+later. The package itself supports Flutter 3.32 or later.
+
 ```shell
 cd example
 flutter pub get

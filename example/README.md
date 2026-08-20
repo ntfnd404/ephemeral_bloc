@@ -4,6 +4,10 @@ A runnable Flutter application demonstrating typed one-shot UI actions,
 provider-based listening, `EphemeralBlocConsumer`, and safe handling of an
 asynchronous confirmation dialog.
 
+The example uses the current Flutter project scaffold and requires Flutter
+3.47 or later. The `ephemeral_bloc` package itself supports Flutter 3.32 or
+later.
+
 From the repository root:
 
 ```shell
