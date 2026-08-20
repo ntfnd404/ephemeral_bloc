@@ -23,8 +23,10 @@ import 'package:nested/nested.dart';
 ///   child: ...,
 /// )
 /// ```
-class EphemeralBlocListener<B extends BlocBase<S>, S, A>
+class EphemeralBlocListener<B extends BlocBase<S>, S, A extends Object>
     extends SingleChildStatefulWidget {
+  /// Creates a listener for one-shot actions from [bloc] or the nearest
+  /// matching provider.
   const EphemeralBlocListener({
     super.key,
     required this.listener,
@@ -33,7 +35,7 @@ class EphemeralBlocListener<B extends BlocBase<S>, S, A>
     super.child,
   });
 
-  /// The BLoC to subscribe to. When null, resolved via [context.read].
+  /// The BLoC to subscribe to. When null, resolved via `context.read`.
   final B? bloc;
 
   /// Called on the main isolate for each emitted action.
@@ -67,7 +69,7 @@ class EphemeralBlocListener<B extends BlocBase<S>, S, A>
       _EphemeralBlocListenerState<B, S, A>();
 }
 
-class _EphemeralBlocListenerState<B extends BlocBase<S>, S, A>
+class _EphemeralBlocListenerState<B extends BlocBase<S>, S, A extends Object>
     extends SingleChildState<EphemeralBlocListener<B, S, A>> {
   StreamSubscription<A>? _subscription;
   late B _bloc;
@@ -99,13 +101,9 @@ class _EphemeralBlocListenerState<B extends BlocBase<S>, S, A>
   @override
   void didUpdateWidget(EphemeralBlocListener<B, S, A> old) {
     super.didUpdateWidget(old);
-    // When both [old.bloc] and [widget.bloc] are null the BLoC is resolved from
-    // the nearest provider — [context.read<B>()] returns the same instance, so
-    // [oldBloc == current] and no resubscription occurs. This is intentional.
-    final oldBloc = old.bloc ?? context.read<B>();
-    final current = widget.bloc ?? oldBloc;
-    if (oldBloc != current) {
-      _subscription?.cancel();
+    final current = widget.bloc ?? context.read<B>();
+    if (_bloc != current) {
+      _unsubscribe();
       _bloc = current;
       _subscribe();
     }
@@ -116,7 +114,7 @@ class _EphemeralBlocListenerState<B extends BlocBase<S>, S, A>
     super.didChangeDependencies();
     final bloc = widget.bloc ?? context.read<B>();
     if (_bloc != bloc) {
-      _subscription?.cancel();
+      _unsubscribe();
       _bloc = bloc;
       _subscribe();
     }
@@ -124,11 +122,20 @@ class _EphemeralBlocListenerState<B extends BlocBase<S>, S, A>
 
   @override
   void dispose() {
-    _subscription?.cancel();
+    _unsubscribe();
     super.dispose();
   }
 
   @override
-  Widget buildWithChild(BuildContext context, Widget? child) =>
-      child ?? const SizedBox.shrink();
+  Widget buildWithChild(BuildContext context, Widget? child) {
+    if (widget.bloc == null) {
+      context.select<B, bool>((bloc) => identical(_bloc, bloc));
+    }
+    return child ?? const SizedBox.shrink();
+  }
+
+  void _unsubscribe() {
+    _subscription?.cancel();
+    _subscription = null;
+  }
 }

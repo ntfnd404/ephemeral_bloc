@@ -6,4 +6,13 @@ final class StubEphemeralBloc extends Bloc<Object, int>
   StubEphemeralBloc() : super(0) {
     on<Object>((_, emit) => emit(state + 1));
   }
+
+  void emitTestAction(String action) => emitAction(action);
+}
+
+final class StubEphemeralCubit extends Cubit<int>
+    with EphemeralBlocMixin<int, String> {
+  StubEphemeralCubit() : super(0);
+
+  void emitTestAction(String action) => emitAction(action);
 }
